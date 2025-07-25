@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
+import Home from './pages/Home'; // İletişim içeriği burada
 import Products from './pages/Products';
 
 export default function App() {
@@ -12,8 +12,9 @@ export default function App() {
       <Navbar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
       <div className="p-6">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Navigate to="/products" />} />
           <Route path="/products" element={<Products searchTerm={searchTerm} />} />
+          <Route path="/contact" element={<Home />} />
         </Routes>
       </div>
     </div>

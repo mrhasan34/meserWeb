@@ -3,80 +3,42 @@
     "id": 1,
     "name": "SuperPhone X200",
     "description": "6.5\" Super AMOLED ekran, 128GB depolama, triple kamera sistemi",
-    "stock": 42,
-    "type": "Akıllı Telefon",
-    "imageUrl": "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?ixlib=rb-4.0.3&auto=format&fit=crop&w=500"
+    "image": "resim1.jpg"
   },
   {
     "id": 2,
     "name": "ProTablet Z5",
     "description": "10.1\" 2K dokunmatik ekran, 64GB depolama, kalem desteği",
-    "stock": 15,
-    "type": "Tablet",
-    "imageUrl": "https://images.unsplash.com/photo-1546538915-a9e2c8d0a8e6?ixlib=rb-4.0.3&auto=format&fit=crop&w=500"
+    "image": "resim2.jpg"
   },
   {
     "id": 3,
     "name": "UltraBook Air",
     "description": "13.3\" IPS ekran, 256GB SSD, 8GB RAM, ultra ince tasarım",
-    "stock": 8,
-    "type": "Dizüstü Bilgisayar",
-    "imageUrl": "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?ixlib=rb-4.0.3&auto=format&fit=crop&w=500"
+    "image": "resim3.jpg"
   },
   {
     "id": 4,
     "name": "SoundWave 360",
     "description": "Kablosuz kulaklık, 20 saat pil ömrü, aktif gürültü engelleme",
-    "stock": 36,
-    "type": "Kulaklık",
-    "imageUrl": "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?ixlib=rb-4.0.3&auto=format&fit=crop&w=500"
+    "image": "resim4.jpg"
   },
   {
     "id": 5,
     "name": "GameMaster X",
     "description": "Oyuncu mouse, 16000 DPI, RGB aydınlatma, 8 programlanabilir tuş",
-    "stock": 24,
-    "type": "Oyuncu Donanımı",
-    "imageUrl": "https://images.unsplash.com/photo-1527814050087-3793815479db?ixlib=rb-4.0.3&auto=format&fit=crop&w=500"
+    "image": "resim5.jpg"
   },
   {
     "id": 6,
     "name": "PowerBank 20000mAh",
     "description": "Hızlı şarj, çift USB çıkışı, LED pil göstergesi",
-    "stock": 50,
-    "type": "Aksesuar",
-    "imageUrl": "https://images.unsplash.com/photo-1585771724684-38269d6639fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500"
+    "image": "resim6.jpg"
   },
   {
     "id": 7,
     "name": "SmartWatch 4",
     "description": "1.3\" AMOLED ekran, kalp atışı ölçer, su geçirmez",
-    "stock": 18,
-    "type": "Akıllı Saat",
-    "imageUrl": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=500"
-  },
-  {
-    "id": 8,
-    "name": "4K Action Cam",
-    "description": "4K/60fps video, su geçirmez kasa, 170° geniş açı lens",
-    "stock": 12,
-    "type": "Kamera",
-    "imageUrl": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&auto=format&fit=crop&w=500"
-  },
-  {
-    "id": 9,
-    "name": "E-Reader Pro",
-    "description": "6\" e-ink ekran, 8GB depolama, göz koruma modu",
-    "stock": 7,
-    "type": "E-Kitap Okuyucu",
-    "imageUrl": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500"
-  },
-  {
-    "id": 10,
-    "name": "Wireless Charger",
-    "description": "15W hızlı kablosuz şarj, çift şarj bölgesi, LED gösterge",
-    "stock": 30,
-    "type": "Aksesuar",
-    "imageUrl": "https://images.unsplash.com/photo-1587080413959-06b859fb107d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500"
-  }
-]
+    "image": "resim7.jpg"
+    }
+  ]

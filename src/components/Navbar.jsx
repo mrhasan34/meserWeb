@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, Link } from 'react-router-dom';
 import logo from '../assets/logo.png';
 
 const Navbar = ({ onSearchChange, searchTerm }) => {
@@ -7,7 +7,7 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
   const showSearch = location.pathname === '/products';
 
   return (
-    <nav className="p-4 flex flex-wrap items-center justify-between sticky top-0 z-50 shadow-lg" style={{ backgroundColor: '#7c3aed' }}>
+    <nav className="bg-purple-800 text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-lg">
       <div className="flex items-center">
         <img src={logo} alt="Logo" className="h-10 w-10 mr-3" />
         <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-500 to-yellow-400 text-2xl font-extrabold tracking-wide drop-shadow-lg select-none">MESER</span>
@@ -35,7 +35,7 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
           TELEFON
         </NavLink>
         <NavLink
-          to="/"
+          to="/contact"
           className={({ isActive }) =>
             `px-3 py-2 rounded-md text-white hover:bg-purple-700 transition-colors whitespace-nowrap ${isActive ? 'bg-purple-800' : ''}`
           }
