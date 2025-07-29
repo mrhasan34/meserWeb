@@ -1,12 +1,27 @@
-import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink } from 'react-router-dom';
 import { AiOutlineMenu, AiOutlineClose } from 'react-icons/ai';
 import logo from '../assets/logo.png';
 
 const Navbar = ({ onSearchChange, searchTerm }) => {
-  const location = useLocation();
-  const showSearch = location.pathname === '/products';
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+
+  // HashRouter desteği (GitHub Pages için)
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const currentPath = window.location.hash.replace('#', '');
+      setShowSearch(currentPath === '/products');
+    };
+    handleLocationChange();
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => window.removeEventListener('hashchange', handleLocationChange);
+  }, []);
+
+  // Menü açıkken body scroll'u kapatma
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : 'auto';
+  }, [menuOpen]);
 
   return (
     <nav className="bg-purple-800 text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-lg">
@@ -18,7 +33,7 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
         </span>
       </div>
 
-      {/* Search bar (her zaman ortada kalır) */}
+      {/* Search bar */}
       {showSearch && (
         <div className="flex-grow max-w-xl mx-4">
           <input
@@ -36,7 +51,7 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
         <NavLink
           to="/products"
           className={({ isActive }) =>
-            `px-3 py-2 rounded-md text-white hover:bg-purple-700 transition-colors whitespace-nowrap ${isActive ? 'bg-purple-800' : ''}`
+            `px-3 py-2 rounded-md text-white hover:bg-purple-700 transition-colors whitespace-nowrap ${isActive ? 'bg-purple-900' : ''}`
           }
         >
           TELEFON
@@ -44,7 +59,7 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
         <NavLink
           to="/contact"
           className={({ isActive }) =>
-            `px-3 py-2 rounded-md text-white hover:bg-purple-700 transition-colors whitespace-nowrap ${isActive ? 'bg-purple-800' : ''}`
+            `px-3 py-2 rounded-md text-white hover:bg-purple-700 transition-colors whitespace-nowrap ${isActive ? 'bg-purple-900' : ''}`
           }
         >
           İLETİŞİM
@@ -52,13 +67,13 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
       </div>
 
       {/* Mobile Menü butonu */}
-      <div className="md:hidden cursor-pointer ml-2" onClick={() => setMenuOpen(!menuOpen)}>
-        {menuOpen ? <AiOutlineClose size={24} /> : <AiOutlineMenu size={24} />}
+      <div className="md:hidden cursor-pointer ml-2 z-50" onClick={() => setMenuOpen(!menuOpen)}>
+        {menuOpen ? <AiOutlineClose size={26} /> : <AiOutlineMenu size={26} />}
       </div>
 
       {/* Mobile Menü */}
       {menuOpen && (
-        <div className="absolute top-16 right-4 bg-purple-800 shadow-lg rounded-md flex flex-col w-40 md:hidden">
+        <div className="absolute top-16 right-4 bg-purple-800 shadow-lg rounded-md flex flex-col w-40 md:hidden animate-slide-down">
           <NavLink
             to="/products"
             className="px-4 py-2 hover:bg-purple-700 rounded-t-md"
