@@ -1,22 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { AiOutlineMenu, AiOutlineClose } from 'react-icons/ai';
 import logo from '../assets/logo.png';
 
 const Navbar = ({ onSearchChange, searchTerm }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const location = useLocation();
 
-  // HashRouter desteği (GitHub Pages için)
+  // URL değişimini takip et (Hem BrowserRouter hem HashRouter için)
   useEffect(() => {
-    const handleLocationChange = () => {
-      const currentPath = window.location.hash.replace('#', '');
-      setShowSearch(currentPath === '/products');
+    const getCurrentPath = () => {
+      // HashRouter kullanılıyorsa hash'i, yoksa pathname'i al
+      let path = window.location.hash
+        ? window.location.hash.replace(/^#/, '')
+        : location.pathname;
+
+      // Sondaki / karakterini temizle
+      if (path.endsWith('/')) path = path.slice(0, -1);
+
+      setShowSearch(path === '/products');
     };
-    handleLocationChange();
-    window.addEventListener('hashchange', handleLocationChange);
-    return () => window.removeEventListener('hashchange', handleLocationChange);
-  }, []);
+
+    getCurrentPath();
+    window.addEventListener('hashchange', getCurrentPath);
+    return () => window.removeEventListener('hashchange', getCurrentPath);
+  }, [location]);
 
   // Menü açıkken body scroll'u kapatma
   useEffect(() => {
