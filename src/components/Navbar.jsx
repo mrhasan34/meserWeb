@@ -5,29 +5,12 @@ import logo from '../assets/logo.png';
 
 const Navbar = ({ onSearchChange, searchTerm }) => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
   const location = useLocation();
 
-  // URL değişimini takip et (Hem BrowserRouter hem HashRouter için)
-  useEffect(() => {
-    const getCurrentPath = () => {
-      // HashRouter kullanılıyorsa hash'i, yoksa pathname'i al
-      let path = window.location.hash
-        ? window.location.hash.replace(/^#/, '')
-        : location.pathname;
+  // Sadece pathname’e bak, HashRouter olursa hash’ten, BrowserRouter olursa doğrudan history’den alır
+  const showSearch = location.pathname === '/products';
 
-      // Sondaki / karakterini temizle
-      if (path.endsWith('/')) path = path.slice(0, -1);
-
-      setShowSearch(path === '/products');
-    };
-
-    getCurrentPath();
-    window.addEventListener('hashchange', getCurrentPath);
-    return () => window.removeEventListener('hashchange', getCurrentPath);
-  }, [location]);
-
-  // Menü açıkken body scroll'u kapatma
+  // Menü açıkken sayfa scroll’unu kapat
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : 'auto';
   }, [menuOpen]);
@@ -60,7 +43,9 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
         <NavLink
           to="/products"
           className={({ isActive }) =>
-            `px-3 py-2 rounded-md text-white hover:bg-purple-700 transition-colors whitespace-nowrap ${isActive ? 'bg-purple-900' : ''}`
+            `px-3 py-2 rounded-md text-white hover:bg-purple-700 transition-colors whitespace-nowrap ${
+              isActive ? 'bg-purple-900' : ''
+            }`
           }
         >
           TELEFON
@@ -68,7 +53,9 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
         <NavLink
           to="/contact"
           className={({ isActive }) =>
-            `px-3 py-2 rounded-md text-white hover:bg-purple-700 transition-colors whitespace-nowrap ${isActive ? 'bg-purple-900' : ''}`
+            `px-3 py-2 rounded-md text-white hover:bg-purple-700 transition-colors whitespace-nowrap ${
+              isActive ? 'bg-purple-900' : ''
+            }`
           }
         >
           İLETİŞİM
@@ -76,7 +63,10 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
       </div>
 
       {/* Mobile Menü butonu */}
-      <div className="md:hidden cursor-pointer ml-2 z-50" onClick={() => setMenuOpen(!menuOpen)}>
+      <div
+        className="md:hidden cursor-pointer ml-2 z-50"
+        onClick={() => setMenuOpen(o => !o)}
+      >
         {menuOpen ? <AiOutlineClose size={26} /> : <AiOutlineMenu size={26} />}
       </div>
 
