@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/meserWeb/static/css/main.7e724abb.css",
-    "main.js": "/meserWeb/static/js/main.1d5f49ea.js",
+    "main.js": "/meserWeb/static/js/main.b7d54588.js",
     "static/media/resim5.jpg": "/meserWeb/static/media/resim5.0459e4c54681b06c942f.jpg",
     "static/media/resim6.jpg": "/meserWeb/static/media/resim6.77c34b3565572f4d7053.jpg",
     "static/media/resim1.jpg": "/meserWeb/static/media/resim1.e11e25885f875393c51e.jpg",
@@ -12,10 +12,10 @@
     "static/media/logo.png": "/meserWeb/static/media/logo.d5c28a5e01a41aec1a19.png",
     "index.html": "/meserWeb/index.html",
     "main.7e724abb.css.map": "/meserWeb/static/css/main.7e724abb.css.map",
-    "main.1d5f49ea.js.map": "/meserWeb/static/js/main.1d5f49ea.js.map"
+    "main.b7d54588.js.map": "/meserWeb/static/js/main.b7d54588.js.map"
   },
   "entrypoints": [
     "static/css/main.7e724abb.css",
-    "static/js/main.1d5f49ea.js"
+    "static/js/main.b7d54588.js"
   ]
 }
