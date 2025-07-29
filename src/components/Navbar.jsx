@@ -18,18 +18,12 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
   return (
     <nav className="bg-purple-800 text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-lg">
       {/* Logo */}
-      <div className="flex items-center absolute left-2 sm:left-4">
-        <img
-          src={logo}
-          alt="Logo"
-          className="h-8 w-8 sm:h-10 sm:w-10 mr-2 sm:mr-3"
-        />
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-500 to-yellow-400 
-                   text-xl sm:text-2xl font-extrabold tracking-wide drop-shadow-lg select-none">
+      <div className="flex items-center absolute left-4">
+        <img src={logo} alt="Logo" className="h-10 w-10 mr-3" />
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-500 to-yellow-400 text-2xl font-extrabold tracking-wide drop-shadow-lg select-none">
           MESER
         </span>
       </div>
-
 
       {/* Search bar */}
       {showSearch && (
