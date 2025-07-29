@@ -18,7 +18,7 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
   return (
     <nav className="bg-purple-800 text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-lg">
       {/* Logo */}
-      <div className="flex items-center mr-auto">
+      <div className="flex items-center absolute left-4">
         <img src={logo} alt="Logo" className="h-10 w-10 mr-3" />
         <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-500 to-yellow-400 text-2xl font-extrabold tracking-wide drop-shadow-lg select-none">
           MESER
