@@ -22,10 +22,9 @@ class ProductApp:
         self.style.configure("TButton", font=("Arial", 10), padding=6)
         self.style.configure("Header.TLabel", font=("Arial", 14, "bold"), foreground="#2c3e50")
         
-        # Dizin yollarını ayarla (2 üst dizine çık)
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        self.assets_dir = os.path.join(base_dir, "meserweb", "src", "assets")
-        self.data_dir = os.path.join(base_dir, "meserweb", "src", "data")
+        # Klasör yollarını güncelle
+        self.assets_dir = "src/assets"
+        self.data_dir = "src/data"
         
         # Gerekli klasörleri oluştur
         os.makedirs(self.assets_dir, exist_ok=True)
@@ -179,7 +178,7 @@ class ProductApp:
             new_image_name = f"{product_id}{ext}"
             target_path = os.path.join(self.assets_dir, new_image_name)
             
-            # Resmi kopyala (meserweb/src/assets klasörüne)
+            # Resmi kopyala (src/assets klasörüne)
             shutil.copy2(self.image_path, target_path)
             
             # JSON için resim yolunu oluştur
@@ -193,7 +192,7 @@ class ProductApp:
                 "image": relative_image_path  # Örnek: "assets/98019473.jpeg"
             }
             
-            # JSON dosyasını güncelle (meserweb/src/data/products.json)
+            # JSON dosyasını güncelle (src/data/products.json)
             if os.path.exists(self.json_file):
                 with open(self.json_file, 'r+') as f:
                     data = json.load(f)
