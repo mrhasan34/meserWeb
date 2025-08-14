@@ -7,7 +7,7 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
-  // Sadece pathname’e bak, HashRouter olursa hash’ten, BrowserRouter olursa doğrudan history’den alır
+  // Sadece products sayfasında arama çubuğu görünsün
   const showSearch = location.pathname === '/products';
 
   // Menü açıkken sayfa scroll’unu kapat
@@ -17,33 +17,34 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
 
   return (
     <nav className="bg-purple-800 text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-lg">
-      {/* Logo */}
-      <div className="flex items-center absolute left-4">
+      {/* Sol köşe - Logo + MESER */}
+      <div className="flex items-center">
         <img src={logo} alt="Logo" className="h-10 w-10 mr-3" />
         <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-fuchsia-500 to-yellow-400 text-2xl font-extrabold tracking-wide drop-shadow-lg select-none">
           MESER
         </span>
       </div>
 
-      {/* Search bar */}
+      {/* Orta - Search Bar */}
       {showSearch && (
-        <div className="flex-grow max-w-xl mx-4">
+        <div className="flex-grow max-w-xl mx-4 hidden md:block">
           <input
             type="text"
             value={searchTerm}
-            onChange={e => onSearchChange(e.target.value)}
+            onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Ürün ara..."
             className="w-full px-4 py-2 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-300 shadow-sm"
           />
         </div>
       )}
 
-      {/* Desktop Menü */}
-      <div className="hidden md:flex space-x-4 mt-2 sm:mt-0">
+      {/* Sağ köşe - Butonlar (Desktop) */}
+      <div className="hidden md:flex items-center space-x-4">
         <NavLink
           to="/products"
           className={({ isActive }) =>
-            `px-3 py-2 rounded-md text-white hover:bg-purple-700 transition-colors whitespace-nowrap ${isActive ? 'bg-purple-900' : ''
+            `px-3 py-2 rounded-md text-white hover:bg-purple-700 transition-colors whitespace-nowrap ${
+              isActive ? 'bg-purple-900' : ''
             }`
           }
         >
@@ -52,7 +53,8 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
         <NavLink
           to="/contact"
           className={({ isActive }) =>
-            `px-3 py-2 rounded-md text-white hover:bg-purple-700 transition-colors whitespace-nowrap ${isActive ? 'bg-purple-900' : ''
+            `px-3 py-2 rounded-md text-white hover:bg-purple-700 transition-colors whitespace-nowrap ${
+              isActive ? 'bg-purple-900' : ''
             }`
           }
         >
@@ -63,7 +65,7 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
       {/* Mobile Menü butonu */}
       <div
         className="md:hidden cursor-pointer ml-2 z-50"
-        onClick={() => setMenuOpen(o => !o)}
+        onClick={() => setMenuOpen((o) => !o)}
       >
         {menuOpen ? <AiOutlineClose size={26} /> : <AiOutlineMenu size={26} />}
       </div>
