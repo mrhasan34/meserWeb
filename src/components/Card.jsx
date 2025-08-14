@@ -1,13 +1,15 @@
 import React from 'react';
 
-// Tüm asset görsellerini al
+// src/assets klasöründeki tüm görselleri topla
 const images = require.context('../assets', false, /\.(png|jpe?g|svg)$/);
 
 export default function Card({ product }) {
   let productImage;
 
   try {
-    productImage = images(`./${product.image}`);
+    // Sadece dosya adını alıyoruz (ör: 26635056.jpeg)
+    const fileName = product.image.split('/').pop();
+    productImage = images(`./${fileName}`);
   } catch (error) {
     console.warn(`Görsel bulunamadı: ${product.image}`);
     productImage = null;
