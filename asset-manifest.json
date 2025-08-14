@@ -1,16 +1,15 @@
 {
   "files": {
     "main.css": "/meserWeb/static/css/main.111f6882.css",
-    "main.js": "/meserWeb/static/js/main.dc0da22b.js",
+    "main.js": "/meserWeb/static/js/main.52cf75ff.js",
     "static/media/26635056.jpeg": "/meserWeb/static/media/26635056.bbd9e1ddfc2f5d8b1e99.jpeg",
     "static/media/14630376.jpeg": "/meserWeb/static/media/14630376.ec31899d44af74f73958.jpeg",
-    "static/media/logo.png": "/meserWeb/static/media/logo.42e2d8ce8f48cc39dafc.png",
     "index.html": "/meserWeb/index.html",
     "main.111f6882.css.map": "/meserWeb/static/css/main.111f6882.css.map",
-    "main.dc0da22b.js.map": "/meserWeb/static/js/main.dc0da22b.js.map"
+    "main.52cf75ff.js.map": "/meserWeb/static/js/main.52cf75ff.js.map"
   },
   "entrypoints": [
     "static/css/main.111f6882.css",
-    "static/js/main.dc0da22b.js"
+    "static/js/main.52cf75ff.js"
   ]
 }
