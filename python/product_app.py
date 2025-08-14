@@ -135,17 +135,22 @@ class ProductApp:
     
     def github_commit(self):
         """Değişiklikleri GitHub'a gönder"""
+        original_cwd = os.getcwd()
         try:
-            # Tüm değişiklikleri ekle
-            subprocess.run(["git", "add", "."], check=True)
-            
+            # Git deposunun kök dizinine git
+            os.chdir(self.base_dir)
+
+            # Sadece ilgili dosyaları ekle
+            subprocess.run(["git", "add", os.path.join("meserweb", "src", "assets")], check=True)
+            subprocess.run(["git", "add", os.path.join("meserweb", "src", "data", "products.json")], check=True)
+
             # Commit oluştur
             commit_message = f"Ürün eklendi: {self.product_name.get()}"
             subprocess.run(["git", "commit", "-m", commit_message], check=True)
-            
+
             # Değişiklikleri gönder
             result = subprocess.run(["git", "push"], capture_output=True, text=True)
-            
+
             if result.returncode == 0:
                 self.status_bar.config(text="Değişiklikler GitHub'a başarıyla gönderildi!")
             else:
@@ -154,57 +159,60 @@ class ProductApp:
             self.status_bar.config(text=f"GitHub Hatası: {str(e)}")
         except Exception as e:
             self.status_bar.config(text=f"Hata: {str(e)}")
-    
+        finally:
+            # Çalışma dizinini geri döndür
+            os.chdir(original_cwd)
+
     def save_product(self):
         # Validasyon
         if not self.product_name.get():
             messagebox.showerror("Hata", "Ürün adı boş olamaz!")
             return
-        
+
         if not self.image_path:
             messagebox.showerror("Hata", "Lütfen bir resim seçin!")
             return
-        
+
         try:
             # Benzersiz ID oluştur
             product_id = self.generate_unique_id()
-            
+
             # Resim uzantısını al
             ext = os.path.splitext(self.image_path)[1].lower()
             if ext not in ['.jpg', '.jpeg', '.png']:
                 messagebox.showerror("Hata", "Desteklenmeyen dosya formatı! (JPG, PNG kullanın)")
                 return
-            
+
             # Yeni resim adı
             new_image_name = f"{product_id}{ext}"
             target_path = os.path.join(self.assets_dir, new_image_name)
-            
-            # Resmi kopyala (meserweb/src/assets klasörüne)
+
+            # Resmi kopyala
             shutil.copy2(self.image_path, target_path)
-            
+
             # JSON için resim yolunu oluştur
             relative_image_path = f"assets/{new_image_name}"
-            
+
             # JSON verisini hazırla
             product_data = {
                 "id": product_id,
                 "name": self.product_name.get(),
                 "description": self.desc_entry.get("1.0", tk.END).strip(),
-                "image": relative_image_path  # Örnek: "assets/98019473.jpeg"
+                "image": relative_image_path
             }
-            
-            # JSON dosyasını güncelle (meserweb/src/data/products.json)
+
+            # JSON dosyasını güncelle
             if os.path.exists(self.json_file):
                 with open(self.json_file, 'r+') as f:
                     data = json.load(f)
             else:
                 data = []
-            
+
             data.append(product_data)
-            
+
             with open(self.json_file, 'w') as f:
                 json.dump(data, f, indent=4)
-            
+
             # GitHub commit işlemi
             self.github_commit()
             
