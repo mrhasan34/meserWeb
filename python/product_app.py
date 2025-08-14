@@ -135,28 +135,45 @@ class ProductApp:
     
     def github_commit(self):
         """Değişiklikleri GitHub'a gönder"""
-        original_cwd = os.getcwd()
         try:
-            # Git deposunun kök dizinine git
-            os.chdir(self.base_dir)
+            # Mevcut çalışma dizinini kaydet
+            original_cwd = os.getcwd()
 
-            # Sadece ilgili dosyaları ekle
-            subprocess.run(["git", "add", os.path.join("meserweb", "src", "assets")], check=True)
-            subprocess.run(["git", "add", os.path.join("meserweb", "src", "data", "products.json")], check=True)
+            # Git deposunun kök dizinine git
+            os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+            # Tüm yeni dosyaları ve değişiklikleri ekle
+            subprocess.run(["git", "add", "--all"], check=True)
+
+            # Değişiklik olup olmadığını kontrol et
+            status_result = subprocess.run(
+                ["git", "status", "--porcelain"],
+                capture_output=True, text=True, check=True
+            )
+
+            if not status_result.stdout.strip():
+                self.status_bar.config(text="GitHub: Değişiklik yok")
+                return
 
             # Commit oluştur
             commit_message = f"Ürün eklendi: {self.product_name.get()}"
             subprocess.run(["git", "commit", "-m", commit_message], check=True)
 
             # Değişiklikleri gönder
-            result = subprocess.run(["git", "push"], capture_output=True, text=True)
+            push_result = subprocess.run(
+                ["git", "push"],
+                capture_output=True, text=True
+            )
 
-            if result.returncode == 0:
+            if push_result.returncode == 0:
                 self.status_bar.config(text="Değişiklikler GitHub'a başarıyla gönderildi!")
             else:
-                self.status_bar.config(text=f"GitHub Hatası: {result.stderr[:100]}...")
+                error_msg = push_result.stderr if push_result.stderr else push_result.stdout
+                self.status_bar.config(text=f"GitHub Hatası: {error_msg[:150]}...")
+                
         except subprocess.CalledProcessError as e:
-            self.status_bar.config(text=f"GitHub Hatası: {str(e)}")
+            error_msg = e.stderr if e.stderr else str(e)
+            self.status_bar.config(text=f"GitHub Hatası: {error_msg}")
         except Exception as e:
             self.status_bar.config(text=f"Hata: {str(e)}")
         finally:
