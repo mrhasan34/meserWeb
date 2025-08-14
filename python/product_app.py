@@ -22,12 +22,16 @@ class ProductApp:
         self.style.configure("TButton", font=("Arial", 10), padding=6)
         self.style.configure("Header.TLabel", font=("Arial", 14, "bold"), foreground="#2c3e50")
         
-        # ProductPhotos klasörünü oluştur
-        self.photo_dir = "ProductPhotos"
-        os.makedirs(self.photo_dir, exist_ok=True)
+        # Klasör yollarını güncelle
+        self.assets_dir = "src/assets"
+        self.data_dir = "src/data"
         
-        # JSON dosyasını kontrol et
-        self.json_file = "products.json"
+        # Gerekli klasörleri oluştur
+        os.makedirs(self.assets_dir, exist_ok=True)
+        os.makedirs(self.data_dir, exist_ok=True)
+        
+        # JSON dosya yolu
+        self.json_file = os.path.join(self.data_dir, "products.json")
         if not os.path.exists(self.json_file):
             with open(self.json_file, 'w') as f:
                 json.dump([], f)
@@ -172,35 +176,43 @@ class ProductApp:
             
             # Yeni resim adı
             new_image_name = f"{product_id}{ext}"
-            target_path = os.path.join(self.photo_dir, new_image_name)
+            target_path = os.path.join(self.assets_dir, new_image_name)
             
-            # Resmi kopyala
+            # Resmi kopyala (src/assets klasörüne)
             shutil.copy2(self.image_path, target_path)
             
-            # JSON için proje içi göreceli yol (python/ öneki ekleniyor)
-            relative_image_path = f"python/ProductPhotos/{new_image_name}"
+            # JSON için resim yolunu oluştur
+            relative_image_path = f"assets/{new_image_name}"
             
             # JSON verisini hazırla
             product_data = {
                 "id": product_id,
                 "name": self.product_name.get(),
                 "description": self.desc_entry.get("1.0", tk.END).strip(),
-                "image": relative_image_path  # Örnek: "python/ProductPhotos/98019473.jpeg"
+                "image": relative_image_path  # Örnek: "assets/98019473.jpeg"
             }
             
-            # JSON dosyasına ekle
-            with open(self.json_file, 'r+') as f:
-                data = json.load(f)
-                data.append(product_data)
-                f.seek(0)
+            # JSON dosyasını güncelle (src/data/products.json)
+            if os.path.exists(self.json_file):
+                with open(self.json_file, 'r+') as f:
+                    data = json.load(f)
+            else:
+                data = []
+            
+            data.append(product_data)
+            
+            with open(self.json_file, 'w') as f:
                 json.dump(data, f, indent=4)
-                f.truncate()
             
             # GitHub commit işlemi
             self.github_commit()
             
             # Başarı mesajı
-            messagebox.showinfo("Başarılı", f"Ürün başarıyla kaydedildi ve GitHub'a gönderildi!\nÜrün ID: {product_id}")
+            messagebox.showinfo("Başarılı", 
+                f"Ürün başarıyla kaydedildi ve GitHub'a gönderildi!\n"
+                f"Ürün ID: {product_id}\n"
+                f"Resim: {target_path}\n"
+                f"Veri: {self.json_file}")
             
             # Alanları temizle
             self.clear_form()
