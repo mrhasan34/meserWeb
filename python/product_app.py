@@ -5,6 +5,7 @@ import os
 import json
 import shutil
 import uuid
+import subprocess
 
 class ProductApp:
     def __init__(self, root):
@@ -21,7 +22,7 @@ class ProductApp:
         self.style.configure("TButton", font=("Arial", 10), padding=6)
         self.style.configure("Header.TLabel", font=("Arial", 14, "bold"), foreground="#2c3e50")
         
-        # ProductPhotos klasörünü oluştur (doğrudan aynı dizinde)
+        # ProductPhotos klasörünü oluştur
         self.photo_dir = "ProductPhotos"
         os.makedirs(self.photo_dir, exist_ok=True)
         
@@ -127,6 +128,28 @@ class ProductApp:
         """Benzersiz bir ID oluştur"""
         return str(uuid.uuid4().int)[:8]
     
+    def github_commit(self):
+        """Değişiklikleri GitHub'a gönder"""
+        try:
+            # Tüm değişiklikleri ekle
+            subprocess.run(["git", "add", "."], check=True)
+            
+            # Commit oluştur
+            commit_message = f"Ürün eklendi: {self.product_name.get()}"
+            subprocess.run(["git", "commit", "-m", commit_message], check=True)
+            
+            # Değişiklikleri gönder
+            result = subprocess.run(["git", "push"], capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                self.status_bar.config(text="Değişiklikler GitHub'a başarıyla gönderildi!")
+            else:
+                self.status_bar.config(text=f"GitHub Hatası: {result.stderr[:100]}...")
+        except subprocess.CalledProcessError as e:
+            self.status_bar.config(text=f"GitHub Hatası: {str(e)}")
+        except Exception as e:
+            self.status_bar.config(text=f"Hata: {str(e)}")
+    
     def save_product(self):
         # Validasyon
         if not self.product_name.get():
@@ -173,9 +196,11 @@ class ProductApp:
                 json.dump(data, f, indent=4)
                 f.truncate()
             
+            # GitHub commit işlemi
+            self.github_commit()
+            
             # Başarı mesajı
-            self.status_bar.config(text=f"Ürün başarıyla kaydedildi! ID: {product_id}")
-            messagebox.showinfo("Başarılı", f"Ürün başarıyla kaydedildi!\nÜrün ID: {product_id}\nResim Yolu: {relative_image_path}")
+            messagebox.showinfo("Başarılı", f"Ürün başarıyla kaydedildi ve GitHub'a gönderildi!\nÜrün ID: {product_id}")
             
             # Alanları temizle
             self.clear_form()
