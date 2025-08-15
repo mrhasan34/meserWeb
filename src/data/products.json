@@ -34,5 +34,11 @@
         "name": "kristal",
         "description": "k\u00fcre",
         "image": "assets/39656129.jpeg"
+    },
+    {
+        "id": "26384865",
+        "name": "elektrikli",
+        "description": "testere",
+        "image": "assets/26384865.jpeg"
     }
 ]
