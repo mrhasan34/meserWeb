@@ -40,5 +40,11 @@
         "name": "elektrikli",
         "description": "testere",
         "image": "assets/26384865.jpeg"
+    },
+    {
+        "id": "30860490",
+        "name": "am \u00fcst\u00fcnde re\u00e7el",
+        "description": "\u00fcz\u00fclme bu g\u00fcnler de ge\u00e7er",
+        "image": "assets/30860490.jpeg"
     }
 ]
