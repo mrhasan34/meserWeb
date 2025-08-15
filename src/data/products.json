@@ -20,7 +20,7 @@
     {
         "id": "76577616",
         "name": "kristal",
-        "description": "k\u00fcre",
+        "description": "küre",
         "image": "assets/76577616.jpg"
     },
     {
@@ -32,7 +32,7 @@
     {
         "id": "39656129",
         "name": "kristal",
-        "description": "k\u00fcre",
+        "description": "küre",
         "image": "assets/39656129.jpeg"
     },
     {
@@ -43,20 +43,26 @@
     },
     {
         "id": "30860490",
-        "name": "am \u00fcst\u00fcnde re\u00e7el",
-        "description": "\u00fcz\u00fclme bu g\u00fcnler de ge\u00e7er",
+        "name": "am üstünde reçel",
+        "description": "üzülme bu günler de geçer",
         "image": "assets/30860490.jpeg"
     },
     {
         "id": "95377975",
         "name": "bahar gelir",
-        "description": "\u00e7i\u00e7ekler a\u00e7ar",
+        "description": "çiçekler açar",
         "image": "assets/95377975.jpeg"
     },
     {
         "id": "27573766",
-        "name": "kiral\u00fd\u00fd\u00fd\u00fdk",
+        "name": "kiralýýýýk",
         "description": "yatak",
         "image": "assets/27573766.jpeg"
+    },
+    {
+        "id": "17753557",
+        "name": "ýýý üü ðð þþ çç iii ,,, ",
+        "description": "türkçe karakter",
+        "image": "assets/17753557.jpeg"
     }
 ]

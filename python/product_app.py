@@ -34,8 +34,8 @@ class ProductApp:
         # JSON dosya yolu
         self.json_file = os.path.join(self.data_dir, "products.json")
         if not os.path.exists(self.json_file):
-            with open(self.json_file, 'w') as f:
-                json.dump([], f)
+            with open(self.json_file, 'w', encoding='utf-8') as f:
+                json.dump([], f, ensure_ascii=False, indent=4)
         
         # Değişkenler
         self.product_name = tk.StringVar()
@@ -136,16 +136,10 @@ class ProductApp:
     def github_commit(self):
         """Değişiklikleri GitHub'a gönder"""
         try:
-            # Mevcut çalışma dizinini kaydet
             original_cwd = os.getcwd()
-
-            # Git deposunun kök dizinine git
             os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-            # Tüm yeni dosyaları ve değişiklikleri ekle
             subprocess.run(["git", "add", "--all"], check=True)
 
-            # Değişiklik olup olmadığını kontrol et
             status_result = subprocess.run(
                 ["git", "status", "--porcelain"],
                 capture_output=True, text=True, check=True
@@ -155,15 +149,9 @@ class ProductApp:
                 self.status_bar.config(text="GitHub: Değişiklik yok")
                 return
 
-            # Commit oluştur
             commit_message = f"Ürün eklendi: {self.product_name.get()}"
             subprocess.run(["git", "commit", "-m", commit_message], check=True)
-
-            # Değişiklikleri gönder
-            push_result = subprocess.run(
-                ["git", "push"],
-                capture_output=True, text=True
-            )
+            push_result = subprocess.run(["git", "push"], capture_output=True, text=True)
 
             if push_result.returncode == 0:
                 self.status_bar.config(text="Değişiklikler GitHub'a başarıyla gönderildi!")
@@ -177,11 +165,9 @@ class ProductApp:
         except Exception as e:
             self.status_bar.config(text=f"Hata: {str(e)}")
         finally:
-            # Çalışma dizinini geri döndür
             os.chdir(original_cwd)
 
     def save_product(self):
-        # Validasyon
         if not self.product_name.get():
             messagebox.showerror("Hata", "Ürün adı boş olamaz!")
             return
@@ -191,26 +177,17 @@ class ProductApp:
             return
 
         try:
-            # Benzersiz ID oluştur
             product_id = self.generate_unique_id()
-
-            # Resim uzantısını al
             ext = os.path.splitext(self.image_path)[1].lower()
             if ext not in ['.jpg', '.jpeg', '.png']:
                 messagebox.showerror("Hata", "Desteklenmeyen dosya formatı! (JPG, PNG kullanın)")
                 return
 
-            # Yeni resim adı
             new_image_name = f"{product_id}{ext}"
             target_path = os.path.join(self.assets_dir, new_image_name)
-
-            # Resmi kopyala
             shutil.copy2(self.image_path, target_path)
-
-            # JSON için resim yolunu oluştur
             relative_image_path = f"assets/{new_image_name}"
 
-            # JSON verisini hazırla
             product_data = {
                 "id": product_id,
                 "name": self.product_name.get(),
@@ -218,29 +195,25 @@ class ProductApp:
                 "image": relative_image_path
             }
 
-            # JSON dosyasını güncelle
             if os.path.exists(self.json_file):
-                with open(self.json_file, 'r+') as f:
+                with open(self.json_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
             else:
                 data = []
 
             data.append(product_data)
 
-            with open(self.json_file, 'w') as f:
-                json.dump(data, f, indent=4)
+            with open(self.json_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
 
-            # GitHub commit işlemi
             self.github_commit()
-            
-            # Başarı mesajı
+
             messagebox.showinfo("Başarılı", 
                 f"Ürün başarıyla kaydedildi ve GitHub'a gönderildi!\n"
                 f"Ürün ID: {product_id}\n"
                 f"Resim: {target_path}\n"
                 f"Veri: {self.json_file}")
             
-            # Alanları temizle
             self.clear_form()
             
         except Exception as e:
@@ -261,9 +234,6 @@ class ProductApp:
 if __name__ == "__main__":
     root = tk.Tk()
     app = ProductApp(root)
-    
-    # Önizleme canvas'ına başlangıç metni
     app.preview_canvas.create_text(100, 100, text="Resim Önizleme", 
                                  fill="#7f8c8d", font=("Arial", 10))
-    
     root.mainloop()
