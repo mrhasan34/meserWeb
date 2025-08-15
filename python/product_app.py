@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
@@ -34,9 +35,12 @@ class ProductApp:
         # JSON dosya yolu
         self.json_file = os.path.join(self.data_dir, "products.json")
         if not os.path.exists(self.json_file):
-            with open(self.json_file, 'w', encoding='utf-8') as f:
+            with open(self.json_file, 'w', encoding='utf-8-sig') as f:
                 json.dump([], f, ensure_ascii=False, indent=4)
-        
+
+        # Var olan JSON'daki muhtemel mojibake karakterlerini otomatik düzelt
+        self.repair_json_encoding()
+
         # Değişkenler
         self.product_name = tk.StringVar()
         self.product_description = tk.StringVar()
@@ -45,7 +49,67 @@ class ProductApp:
         
         # Arayüzü oluştur
         self.create_widgets()
-        
+
+    # --- Türkçe karakter onarım yardımcıları ---
+    @staticmethod
+    def normalize_turkish(text: str) -> str:
+        """
+        Türkçede yaygın mojibake dönüşümlerini düzeltir.
+        Örn: 'ý'->'ı', 'ð'->'ğ', 'þ'->'ş', ayrıca 'Ã¶'->'ö' vb.
+        """
+        if not isinstance(text, str):
+            return text
+
+        # 1) ISO-8859-9/CP1254 -> CP1252 karışıklığı
+        replacements = {
+            "ð": "ğ", "Ð": "Ğ",
+            "þ": "ş", "Þ": "Ş",
+            "ý": "ı", "Ý": "İ",
+        }
+        for bad, good in replacements.items():
+            text = text.replace(bad, good)
+
+        # 2) UTF-8'in CP1252/Latin1 gibi yanlış çözümlenmesi
+        combos = {
+            "Ã¶": "ö", "Ã–": "Ö",
+            "Ã¼": "ü", "Ãœ": "Ü",
+            "Ã§": "ç", "Ã‡": "Ç",
+            "Ã±": "ñ", "Ã¡": "á",  # bazen metinlerden gelebilir
+            "ÄŸ": "ğ", "Äž": "Ğ",
+            "ÅŸ": "ş", "Åž": "Ş",
+            "Ä±": "ı", "Ä°": "İ",
+        }
+        for bad, good in combos.items():
+            text = text.replace(bad, good)
+
+        # 3) Sıklıkla görülen gereksiz 'Â' artığı
+        text = text.replace("Â", "")
+
+        return text
+
+    def repair_json_encoding(self):
+        """Var olan products.json içindeki olası bozuk Türkçe karakterleri düzeltir."""
+        try:
+            with open(self.json_file, 'r', encoding='utf-8-sig') as f:
+                data = json.load(f)
+            changed = False
+            if isinstance(data, list):
+                for item in data:
+                    if isinstance(item, dict):
+                        for key in ("name", "description"):
+                            if key in item and isinstance(item[key], str):
+                                fixed = self.normalize_turkish(item[key])
+                                if fixed != item[key]:
+                                    item[key] = fixed
+                                    changed = True
+            if changed:
+                with open(self.json_file, 'w', encoding='utf-8-sig') as f:
+                    json.dump(data, f, ensure_ascii=False, indent=4)
+        except Exception:
+            # Sessiz geç (dosya bozuksa uygulama yine de çalışsın)
+            pass
+
+    # --- UI ---
     def create_widgets(self):
         # Header
         header_frame = ttk.Frame(self.root)
@@ -135,8 +199,8 @@ class ProductApp:
     
     def github_commit(self):
         """Değişiklikleri GitHub'a gönder"""
+        original_cwd = os.getcwd()
         try:
-            original_cwd = os.getcwd()
             os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             subprocess.run(["git", "add", "--all"], check=True)
 
@@ -168,6 +232,7 @@ class ProductApp:
             os.chdir(original_cwd)
 
     def save_product(self):
+        # Validasyon
         if not self.product_name.get():
             messagebox.showerror("Hata", "Ürün adı boş olamaz!")
             return
@@ -177,43 +242,60 @@ class ProductApp:
             return
 
         try:
+            # Girişleri al ve Türkçe normalizasyonu uygula
+            name_fixed = self.normalize_turkish(self.product_name.get())
+            desc_fixed = self.normalize_turkish(self.desc_entry.get("1.0", tk.END).strip())
+
+            # Benzersiz ID oluştur
             product_id = self.generate_unique_id()
+
+            # Resim uzantısını al
             ext = os.path.splitext(self.image_path)[1].lower()
             if ext not in ['.jpg', '.jpeg', '.png']:
                 messagebox.showerror("Hata", "Desteklenmeyen dosya formatı! (JPG, PNG kullanın)")
                 return
 
+            # Yeni resim adı
             new_image_name = f"{product_id}{ext}"
             target_path = os.path.join(self.assets_dir, new_image_name)
+
+            # Resmi kopyala
             shutil.copy2(self.image_path, target_path)
+
+            # JSON için resim yolunu oluştur
             relative_image_path = f"assets/{new_image_name}"
 
+            # JSON verisini hazırla
             product_data = {
                 "id": product_id,
-                "name": self.product_name.get(),
-                "description": self.desc_entry.get("1.0", tk.END).strip(),
+                "name": name_fixed,
+                "description": desc_fixed,
                 "image": relative_image_path
             }
 
+            # JSON dosyasını güncelle
             if os.path.exists(self.json_file):
-                with open(self.json_file, 'r', encoding='utf-8') as f:
+                with open(self.json_file, 'r', encoding='utf-8-sig') as f:
                     data = json.load(f)
             else:
                 data = []
 
             data.append(product_data)
 
-            with open(self.json_file, 'w', encoding='utf-8') as f:
+            with open(self.json_file, 'w', encoding='utf-8-sig') as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
 
+            # GitHub commit işlemi
             self.github_commit()
-
+            
+            # Başarı mesajı
             messagebox.showinfo("Başarılı", 
                 f"Ürün başarıyla kaydedildi ve GitHub'a gönderildi!\n"
                 f"Ürün ID: {product_id}\n"
                 f"Resim: {target_path}\n"
                 f"Veri: {self.json_file}")
             
+            # Alanları temizle
             self.clear_form()
             
         except Exception as e:
@@ -234,6 +316,7 @@ class ProductApp:
 if __name__ == "__main__":
     root = tk.Tk()
     app = ProductApp(root)
+    # Önizleme canvas'ına başlangıç metni
     app.preview_canvas.create_text(100, 100, text="Resim Önizleme", 
                                  fill="#7f8c8d", font=("Arial", 10))
     root.mainloop()
