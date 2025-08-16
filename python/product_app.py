@@ -255,14 +255,14 @@ class ProductApp:
             return
 
         index = sel[0]
-        # Eğer "Eşleşme bulunamadı." satırı varsa kontrol et
         if index >= len(self.left_list_items):
             messagebox.showinfo("Bilgi", "Geçerli bir ürün seçin.")
             return
 
         prod_id, prod_name = self.left_list_items[index]
         confirm = messagebox.askyesno(
-            "Onay", f"'{prod_name}' (ID: {prod_id}) kaydını JSON'dan ve resmini assets klasöründen silmek istediğinize emin misiniz?"
+            "Onay", 
+            f"'{prod_name}' (ID: {prod_id}) kaydını JSON'dan ve resmini assets klasöründen silmek istediğinize emin misiniz?"
         )
         if not confirm:
             return
@@ -280,20 +280,19 @@ class ProductApp:
         for item in data:
             if item.get("id") == prod_id:
                 removed_item = item
-                # silme: dosya yolu assets içinde ise dosyayı da kaldır
+                # Resim dosyasını silme
                 img_rel = item.get("image", "")
                 if img_rel:
-                    # Göreli path 'assets/xxx.jpg' ise tam path oluştur
-                    img_path = os.path.join(os.path.dirname(self.json_file), img_rel)
-                    # Eğer yol assets dizininde değilse dene direkt assets_dir
-                    if not os.path.exists(img_path):
-                        img_path = os.path.join(self.assets_dir, os.path.basename(img_rel))
-                    try:
-                        if os.path.exists(img_path):
-                            os.remove(img_path)
-                    except Exception:
-                        # sessizce devam et
-                        pass
+                    img_path1 = os.path.join(os.path.dirname(self.json_file), img_rel)
+                    img_path2 = os.path.join(self.assets_dir, os.path.basename(img_rel))
+                    for img_path in [img_path1, img_path2]:
+                        try:
+                            if os.path.exists(img_path):
+                                os.remove(img_path)
+                                self.status_bar.config(text=f"Silindi: {img_path}")
+                        except Exception:
+                            # sessizce devam et
+                            pass
                 continue
             new_data.append(item)
 
