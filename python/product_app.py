@@ -1,322 +1,261 @@
-# -*- coding: utf-8 -*-
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from PIL import Image, ImageTk
 import os
 import json
-import shutil
 import uuid
-import subprocess
+
+PRODUCTS_FILE = "products.json"
+ASSETS_DIR = "assets"
 
 class ProductApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Ürün Yönetim Sistemi")
-        self.root.geometry("700x600")
-        self.root.configure(bg="#f0f0f0")
-        self.style = ttk.Style()
-        self.style.theme_use("clam")
-        
-        # Stil ayarları
-        self.style.configure("TFrame", background="#f0f0f0")
-        self.style.configure("TLabel", background="#f0f0f0", font=("Arial", 10))
-        self.style.configure("TButton", font=("Arial", 10), padding=6)
-        self.style.configure("Header.TLabel", font=("Arial", 14, "bold"), foreground="#2c3e50")
-        
-        # Dizin yollarını ayarla (2 üst dizine çık)
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        self.assets_dir = os.path.join(base_dir, "meserweb", "src", "assets")
-        self.data_dir = os.path.join(base_dir, "meserweb", "src", "data")
-        
-        # Gerekli klasörleri oluştur
-        os.makedirs(self.assets_dir, exist_ok=True)
-        os.makedirs(self.data_dir, exist_ok=True)
-        
-        # JSON dosya yolu
-        self.json_file = os.path.join(self.data_dir, "products.json")
-        if not os.path.exists(self.json_file):
-            with open(self.json_file, 'w', encoding='utf-8-sig') as f:
-                json.dump([], f, ensure_ascii=False, indent=4)
+        self.root.geometry("1000x600")
 
-        # Var olan JSON'daki muhtemel mojibake karakterlerini otomatik düzelt
-        self.repair_json_encoding()
-
-        # Değişkenler
-        self.product_name = tk.StringVar()
-        self.product_description = tk.StringVar()
+        # Ana paneller
+        main_paned = ttk.PanedWindow(root, orient=tk.HORIZONTAL)
+        main_paned.pack(fill=tk.BOTH, expand=True)
+        
+        # Sol Panel (Sabit)
+        frame_left = ttk.Frame(main_paned, width=150)
+        main_paned.add(frame_left)
+        
+        # Sol panel butonları
+        ttk.Button(
+            frame_left, 
+            text="Ürün Ekle", 
+            command=self.show_add_product,
+            width=15
+        ).pack(pady=10, padx=10, fill=tk.X)
+        
+        ttk.Button(
+            frame_left, 
+            text="Ürün Sil", 
+            command=self.show_delete_product,
+            width=15
+        ).pack(pady=10, padx=10, fill=tk.X)
+        
+        # Sağ Panel (Değişken içerik)
+        self.frame_right = ttk.Frame(main_paned)
+        main_paned.add(self.frame_right, weight=1)
+        
+        # Başlangıçta ekleme sayfasını göster
+        self.current_frame = None
+        self.show_add_product()
+        
+        # Veri yükle
+        self.products = self.load_products()
+        
+    def clear_right_frame(self):
+        """Sağ paneli temizle"""
+        for widget in self.frame_right.winfo_children():
+            widget.destroy()
+    
+    def show_add_product(self):
+        """Ürün ekleme sayfasını göster"""
+        self.clear_right_frame()
+        self.current_frame = "add"
+        
+        # Ana ekleme paneli
+        frame_add = ttk.Frame(self.frame_right)
+        frame_add.pack(fill=tk.BOTH, expand=True)
+        
+        # Sol: Giriş alanları
+        frame_inputs = ttk.Frame(frame_add, padding=10)
+        frame_inputs.pack(side=tk.LEFT, fill=tk.Y, padx=5, pady=5)
+        
+        ttk.Label(frame_inputs, text="Ürün Adı:").pack(anchor="w")
+        self.entry_name = ttk.Entry(frame_inputs, width=30)
+        self.entry_name.pack(anchor="w", pady=5, fill=tk.X)
+        
+        ttk.Label(frame_inputs, text="Ürün Açıklaması:").pack(anchor="w")
+        self.entry_desc = ttk.Entry(frame_inputs, width=30)
+        self.entry_desc.pack(anchor="w", pady=5, fill=tk.X)
+        
+        ttk.Button(frame_inputs, text="Resim Seç", command=self.select_image).pack(anchor="w", pady=5)
         self.image_path = None
-        self.image_preview = None
         
-        # Arayüzü oluştur
-        self.create_widgets()
+        ttk.Button(frame_inputs, text="Ürün Ekle", command=self.add_product).pack(anchor="w", pady=10)
+        
+        # Sağ: Önizleme alanı
+        frame_preview = ttk.Frame(frame_add, padding=10)
+        frame_preview.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        ttk.Label(frame_preview, text="Resim Önizleme:").pack(anchor="w")
+        self.preview_canvas = tk.Canvas(frame_preview, width=300, height=300, bg="white", bd=2, relief=tk.SOLID)
+        self.preview_canvas.pack(anchor="w", pady=5)
+        
+        # Başlangıçta boş bir önizleme göster
+        self.update_preview(None)
+    
+    def show_delete_product(self):
+        """Ürün silme sayfasını göster"""
+        self.clear_right_frame()
+        self.current_frame = "delete"
+        
+        # Ürün Silme Paneli
+        frame_delete = ttk.Frame(self.frame_right, padding=10)
+        frame_delete.pack(fill=tk.BOTH, expand=True)
+        
+        ttk.Label(frame_delete, text="Ürün Ara / Sil:").pack(anchor="w")
+        self.entry_search = ttk.Entry(frame_delete, width=40)
+        self.entry_search.pack(anchor="w", pady=5, fill=tk.X)
+        self.entry_search.bind("<KeyRelease>", self.search_products)
+        
+        self.listbox = tk.Listbox(frame_delete, width=40, height=15)
+        self.listbox.pack(anchor="w", pady=5, fill=tk.BOTH, expand=True)
+        self.listbox.bind("<<ListboxSelect>>", self.show_image)
+        
+        self.canvas = tk.Canvas(frame_delete, width=200, height=200, bg="white")
+        self.canvas.pack(anchor="w", pady=5)
+        
+        ttk.Button(frame_delete, text="Seçili Ürünü Sil", command=self.delete_product).pack(anchor="w", pady=10)
+        
+        # Listbox'ı güncelle
+        self.refresh_listbox()
 
-    # --- Türkçe karakter onarım yardımcıları ---
-    @staticmethod
-    def normalize_turkish(text: str) -> str:
-        """
-        Türkçede yaygın mojibake dönüşümlerini düzeltir.
-        Örn: 'ý'->'ı', 'ð'->'ğ', 'þ'->'ş', ayrıca 'Ã¶'->'ö' vb.
-        """
-        if not isinstance(text, str):
-            return text
-
-        # 1) ISO-8859-9/CP1254 -> CP1252 karışıklığı
-        replacements = {
-            "ð": "ğ", "Ð": "Ğ",
-            "þ": "ş", "Þ": "Ş",
-            "ý": "ı", "Ý": "İ",
-        }
-        for bad, good in replacements.items():
-            text = text.replace(bad, good)
-
-        # 2) UTF-8'in CP1252/Latin1 gibi yanlış çözümlenmesi
-        combos = {
-            "Ã¶": "ö", "Ã–": "Ö",
-            "Ã¼": "ü", "Ãœ": "Ü",
-            "Ã§": "ç", "Ã‡": "Ç",
-            "Ã±": "ñ", "Ã¡": "á",  # bazen metinlerden gelebilir
-            "ÄŸ": "ğ", "Äž": "Ğ",
-            "ÅŸ": "ş", "Åž": "Ş",
-            "Ä±": "ı", "Ä°": "İ",
-        }
-        for bad, good in combos.items():
-            text = text.replace(bad, good)
-
-        # 3) Sıklıkla görülen gereksiz 'Â' artığı
-        text = text.replace("Â", "")
-
-        return text
-
-    def repair_json_encoding(self):
-        """Var olan products.json içindeki olası bozuk Türkçe karakterleri düzeltir."""
-        try:
-            with open(self.json_file, 'r', encoding='utf-8-sig') as f:
-                data = json.load(f)
-            changed = False
-            if isinstance(data, list):
-                for item in data:
-                    if isinstance(item, dict):
-                        for key in ("name", "description"):
-                            if key in item and isinstance(item[key], str):
-                                fixed = self.normalize_turkish(item[key])
-                                if fixed != item[key]:
-                                    item[key] = fixed
-                                    changed = True
-            if changed:
-                with open(self.json_file, 'w', encoding='utf-8-sig') as f:
-                    json.dump(data, f, ensure_ascii=False, indent=4)
-        except Exception:
-            # Sessiz geç (dosya bozuksa uygulama yine de çalışsın)
-            pass
-
-    # --- UI ---
-    def create_widgets(self):
-        # Header
-        header_frame = ttk.Frame(self.root)
-        header_frame.pack(fill=tk.X, padx=20, pady=15)
+    def update_preview(self, image_path):
+        """Resim önizlemesini günceller"""
+        self.preview_canvas.delete("all")
         
-        ttk.Label(header_frame, text="ÜRÜN YÖNETİM SİSTEMİ", style="Header.TLabel").pack()
-        
-        # Ana çerçeve
-        main_frame = ttk.Frame(self.root)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
-        
-        # Ürün Bilgileri Çerçevesi
-        input_frame = ttk.LabelFrame(main_frame, text="Ürün Bilgileri", padding=15)
-        input_frame.pack(fill=tk.X, pady=(0, 15))
-        
-        # Ürün Adı
-        name_frame = ttk.Frame(input_frame)
-        name_frame.pack(fill=tk.X, pady=5)
-        ttk.Label(name_frame, text="Ürün Adı*:", width=12).pack(side=tk.LEFT)
-        name_entry = ttk.Entry(name_frame, textvariable=self.product_name, width=40)
-        name_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
-        
-        # Açıklama
-        desc_frame = ttk.Frame(input_frame)
-        desc_frame.pack(fill=tk.X, pady=10)
-        ttk.Label(desc_frame, text="Açıklama:", width=12).pack(side=tk.LEFT)
-        self.desc_entry = tk.Text(desc_frame, height=4, width=40, font=("Arial", 10))
-        self.desc_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
-        
-        # Resim Seç
-        image_frame = ttk.Frame(input_frame)
-        image_frame.pack(fill=tk.X, pady=10)
-        ttk.Label(image_frame, text="Ürün Resmi*:", width=12).pack(side=tk.LEFT)
-        ttk.Button(image_frame, text="Resim Seç", command=self.select_image, width=15).pack(side=tk.LEFT, padx=(5, 10))
-        self.image_status = ttk.Label(image_frame, text="Resim seçilmedi", foreground="#e74c3c")
-        self.image_status.pack(side=tk.LEFT)
-        
-        # Resim önizleme
-        preview_frame = ttk.Frame(input_frame)
-        preview_frame.pack(fill=tk.X, pady=10)
-        ttk.Label(preview_frame, text="Önizleme:", width=12).pack(side=tk.LEFT)
-        self.preview_canvas = tk.Canvas(preview_frame, width=200, height=200, 
-                                      bg="#ecf0f1", highlightthickness=1, highlightbackground="#bdc3c7")
-        self.preview_canvas.pack(side=tk.LEFT, padx=(5, 0))
-        self.preview_label = ttk.Label(preview_frame, text="Resim seçilmedi", 
-                                     foreground="#7f8c8d", font=("Arial", 9))
-        self.preview_label.pack(side=tk.LEFT, padx=10)
-        
-        # Butonlar
-        button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X, pady=15)
-        ttk.Button(button_frame, text="Ürünü Kaydet", command=self.save_product, 
-                  style="TButton").pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(button_frame, text="Temizle", command=self.clear_form).pack(side=tk.LEFT)
-        
-        # Durum çubuğu
-        self.status_bar = ttk.Label(self.root, text="Hazır", relief=tk.SUNKEN, anchor=tk.W)
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
-        
-    def select_image(self):
-        file_path = filedialog.askopenfilename(
-            title="Ürün Resmi Seçin",
-            filetypes=[("Image Files", "*.png *.jpg *.jpeg")]
-        )
-        
-        if file_path:
-            self.image_path = file_path
-            self.image_status.config(text="Resim seçildi", foreground="#27ae60")
-            
+        if image_path and os.path.exists(image_path):
             try:
-                # Resmi küçülterek önizleme yap
-                image = Image.open(file_path)
-                image.thumbnail((200, 200))
-                photo = ImageTk.PhotoImage(image)
-                
-                # Önizleme canvas'ını güncelle
-                self.preview_canvas.delete("all")
-                self.preview_canvas.create_image(100, 100, image=photo)
-                self.preview_canvas.image = photo  # Referansı tut
-                self.preview_label.config(text="")
+                img = Image.open(image_path)
+                img.thumbnail((300, 300))  # Önizleme boyutunu ayarla
+                self.tk_preview_img = ImageTk.PhotoImage(img)
+                self.preview_canvas.create_image(
+                    150, 150,  # Canvas'ın ortasına yerleştir
+                    image=self.tk_preview_img
+                )
             except Exception as e:
-                self.image_status.config(text=f"Hata: {str(e)}", foreground="#e74c3c")
-    
-    def generate_unique_id(self):
-        """Benzersiz bir ID oluştur"""
-        return str(uuid.uuid4().int)[:8]
-    
-    def github_commit(self):
-        """Değişiklikleri GitHub'a gönder"""
-        original_cwd = os.getcwd()
-        try:
-            os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            subprocess.run(["git", "add", "--all"], check=True)
-
-            status_result = subprocess.run(
-                ["git", "status", "--porcelain"],
-                capture_output=True, text=True, check=True
+                self.preview_canvas.create_text(
+                    150, 150,
+                    text="Resim yüklenemedi",
+                    fill="gray"
+                )
+        else:
+            self.preview_canvas.create_text(
+                150, 150,
+                text="Resim seçilmedi",
+                fill="gray"
             )
 
-            if not status_result.stdout.strip():
-                self.status_bar.config(text="GitHub: Değişiklik yok")
-                return
+    # ---------- Ürün ekleme ----------
+    def select_image(self):
+        path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png")])
+        if path:
+            self.image_path = path
+            self.update_preview(path)  # Önizlemeyi güncelle
 
-            commit_message = f"Ürün eklendi: {self.product_name.get()}"
-            subprocess.run(["git", "commit", "-m", commit_message], check=True)
-            push_result = subprocess.run(["git", "push"], capture_output=True, text=True)
-
-            if push_result.returncode == 0:
-                self.status_bar.config(text="Değişiklikler GitHub'a başarıyla gönderildi!")
-            else:
-                error_msg = push_result.stderr if push_result.stderr else push_result.stdout
-                self.status_bar.config(text=f"GitHub Hatası: {error_msg[:150]}...")
-                
-        except subprocess.CalledProcessError as e:
-            error_msg = e.stderr if e.stderr else str(e)
-            self.status_bar.config(text=f"GitHub Hatası: {error_msg}")
-        except Exception as e:
-            self.status_bar.config(text=f"Hata: {str(e)}")
-        finally:
-            os.chdir(original_cwd)
-
-    def save_product(self):
-        # Validasyon
-        if not self.product_name.get():
-            messagebox.showerror("Hata", "Ürün adı boş olamaz!")
+    def add_product(self):
+        name = self.entry_name.get().strip()
+        desc = self.entry_desc.get().strip()
+        
+        if not name or not desc or not self.image_path:
+            messagebox.showerror("Hata", "Lütfen tüm alanları doldurun ve resim seçin!")
             return
-
-        if not self.image_path:
-            messagebox.showerror("Hata", "Lütfen bir resim seçin!")
-            return
-
+            
+        if not os.path.exists(ASSETS_DIR):
+            os.makedirs(ASSETS_DIR)
+            
+        product_id = str(uuid.uuid4())
+        ext = os.path.splitext(self.image_path)[1]
+        new_image_path = os.path.join(ASSETS_DIR, f"{product_id}{ext}")
+        
         try:
-            # Girişleri al ve Türkçe normalizasyonu uygula
-            name_fixed = self.normalize_turkish(self.product_name.get())
-            desc_fixed = self.normalize_turkish(self.desc_entry.get("1.0", tk.END).strip())
-
-            # Benzersiz ID oluştur
-            product_id = self.generate_unique_id()
-
-            # Resim uzantısını al
-            ext = os.path.splitext(self.image_path)[1].lower()
-            if ext not in ['.jpg', '.jpeg', '.png']:
-                messagebox.showerror("Hata", "Desteklenmeyen dosya formatı! (JPG, PNG kullanın)")
-                return
-
-            # Yeni resim adı
-            new_image_name = f"{product_id}{ext}"
-            target_path = os.path.join(self.assets_dir, new_image_name)
-
-            # Resmi kopyala
-            shutil.copy2(self.image_path, target_path)
-
-            # JSON için resim yolunu oluştur
-            relative_image_path = f"assets/{new_image_name}"
-
-            # JSON verisini hazırla
-            product_data = {
+            # Resmi kopyala (orijinal dosyayı korumak için)
+            img = Image.open(self.image_path)
+            img.save(new_image_path)
+            
+            product = {
                 "id": product_id,
-                "name": name_fixed,
-                "description": desc_fixed,
-                "image": relative_image_path
+                "name": name,
+                "description": desc,
+                "image": new_image_path
             }
-
-            # JSON dosyasını güncelle
-            if os.path.exists(self.json_file):
-                with open(self.json_file, 'r', encoding='utf-8-sig') as f:
-                    data = json.load(f)
-            else:
-                data = []
-
-            data.append(product_data)
-
-            with open(self.json_file, 'w', encoding='utf-8-sig') as f:
-                json.dump(data, f, ensure_ascii=False, indent=4)
-
-            # GitHub commit işlemi
-            self.github_commit()
             
-            # Başarı mesajı
-            messagebox.showinfo("Başarılı", 
-                f"Ürün başarıyla kaydedildi ve GitHub'a gönderildi!\n"
-                f"Ürün ID: {product_id}\n"
-                f"Resim: {target_path}\n"
-                f"Veri: {self.json_file}")
+            self.products.append(product)
+            self.save_products()
             
-            # Alanları temizle
-            self.clear_form()
+            # Sadece silme sayfası aktifse listbox'ı güncelle
+            if self.current_frame == "delete":
+                self.refresh_listbox()
+                
+            self.entry_name.delete(0, tk.END)
+            self.entry_desc.delete(0, tk.END)
+            self.image_path = None
+            self.update_preview(None)  # Önizlemeyi temizle
+            messagebox.showinfo("Başarılı", "Ürün eklendi!")
             
         except Exception as e:
-            messagebox.showerror("Hata", f"Bir hata oluştu: {str(e)}")
-            self.status_bar.config(text=f"Hata: {str(e)}")
-    
-    def clear_form(self):
-        self.product_name.set("")
-        self.desc_entry.delete("1.0", tk.END)
-        self.image_path = None
-        self.image_status.config(text="Resim seçilmedi", foreground="#e74c3c")
-        self.preview_canvas.delete("all")
-        self.preview_canvas.create_text(100, 100, text="Resim Önizleme", 
-                                      fill="#7f8c8d", font=("Arial", 10))
-        self.preview_label.config(text="Resim seçilmedi")
-        self.status_bar.config(text="Hazır")
+            messagebox.showerror("Hata", f"Resim kaydedilemedi: {str(e)}")
+
+    # ---------- Ürün arama & silme ----------
+    def search_products(self, event=None):
+        query = self.entry_search.get().lower()
+        self.listbox.delete(0, tk.END)
+        for p in self.products:
+            if query in p["name"].lower():
+                self.listbox.insert(tk.END, p["name"])
+
+    def refresh_listbox(self):
+        self.listbox.delete(0, tk.END)
+        for p in self.products:
+            self.listbox.insert(tk.END, p["name"])
+
+    def show_image(self, event=None):
+        selection = self.listbox.curselection()
+        if not selection:
+            return
+            
+        index = selection[0]
+        name = self.listbox.get(index)
+        product = next((p for p in self.products if p["name"] == name), None)
+        
+        if product and os.path.exists(product["image"]):
+            img = Image.open(product["image"])
+            img.thumbnail((200, 200))
+            self.tk_img = ImageTk.PhotoImage(img)
+            self.canvas.delete("all")
+            self.canvas.create_image(100, 100, image=self.tk_img)
+
+    def delete_product(self):
+        selection = self.listbox.curselection()
+        if not selection:
+            messagebox.showwarning("Uyarı", "Silmek için ürün seçin!")
+            return
+            
+        index = selection[0]
+        name = self.listbox.get(index)
+        
+        # Resmi de sil
+        product = next((p for p in self.products if p["name"] == name), None)
+        if product and os.path.exists(product["image"]):
+            try:
+                os.remove(product["image"])
+            except Exception as e:
+                messagebox.showwarning("Uyarı", f"Resim dosyası silinemedi: {str(e)}")
+        
+        self.products = [p for p in self.products if p["name"] != name]
+        self.save_products()
+        self.refresh_listbox()
+        self.canvas.delete("all")
+        messagebox.showinfo("Başarılı", f"{name} silindi!")
+
+    # ---------- JSON işlemleri ----------
+    def load_products(self):
+        if os.path.exists(PRODUCTS_FILE):
+            with open(PRODUCTS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return []
+
+    def save_products(self):
+        with open(PRODUCTS_FILE, "w", encoding="utf-8") as f:
+            json.dump(self.products, f, ensure_ascii=False, indent=4)
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = ProductApp(root)
-    # Önizleme canvas'ına başlangıç metni
-    app.preview_canvas.create_text(100, 100, text="Resim Önizleme", 
-                                 fill="#7f8c8d", font=("Arial", 10))
     root.mainloop()

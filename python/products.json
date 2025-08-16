@@ -1,0 +1,20 @@
+[
+    {
+        "id": "9b9576ef-9eb2-4b77-b466-49c2f101b558",
+        "name": "asd",
+        "description": "asd",
+        "image": "assets\\9b9576ef-9eb2-4b77-b466-49c2f101b558.jpeg"
+    },
+    {
+        "id": "6e623e7e-5e37-49da-a472-6d086f37a0eb",
+        "name": "ww",
+        "description": "rrrr",
+        "image": "assets\\6e623e7e-5e37-49da-a472-6d086f37a0eb.jpeg"
+    },
+    {
+        "id": "f3a92c59-5e9e-465e-a540-2be020a4fc49",
+        "name": "kiralýk",
+        "description": "çiçekler",
+        "image": "assets\\f3a92c59-5e9e-465e-a540-2be020a4fc49.jpg"
+    }
+]
