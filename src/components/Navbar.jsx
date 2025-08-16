@@ -48,7 +48,7 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
               }`
             }
           >
-            TELEFON
+            TELEFON & AYAKKABI
           </NavLink>
           <NavLink
             to="/contact"
@@ -92,7 +92,7 @@ const Navbar = ({ onSearchChange, searchTerm }) => {
             className="px-4 py-2 hover:bg-purple-700"
             onClick={() => setMenuOpen(false)}
           >
-            TELEFON
+            TELEFON & AYAKKABI
           </NavLink>
           <NavLink
             to="/contact"
