@@ -1,29 +1,65 @@
-import React from 'react';
+import React from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 // src/assets klasöründeki tüm görselleri topla
-const images = require.context('../assets', false, /\.(png|jpe?g|svg)$/);
+const imagesCtx = require.context("../assets", false, /\.(png|jpe?g|svg)$/);
+
+function resolveAsset(path) {
+  if (!path) return null;
+  const fileName = path.split("/").pop();
+  try {
+    const mod = imagesCtx(`./${fileName}`);
+    return mod?.default || mod;
+  } catch {
+    return null;
+  }
+}
 
 export default function Card({ product }) {
-  let productImage;
+  // destek: product.images (array) veya legacy product.image (string)
+  const rawImages = Array.isArray(product?.images)
+    ? product.images
+    : product?.image
+    ? [product.image]
+    : [];
 
-  try {
-    // Sadece dosya adını alıyoruz (ör: 26635056.jpeg)
-    const fileName = product.image.split('/').pop();
-    productImage = images(`./${fileName}`);
-  } catch (error) {
-    console.warn(`Görsel bulunamadı: ${product.image}`);
-    productImage = null;
-  }
+  const resolved = rawImages.map(resolveAsset).filter(Boolean);
 
   return (
     <div className="bg-white shadow-lg rounded-2xl overflow-hidden hover:shadow-2xl transition-shadow">
-      <div className="w-full h-48 flex items-center justify-center bg-white p-2">
-        {productImage ? (
-          <img src={productImage} alt={product.name} className="max-h-full object-contain" />
+      {/* Görseller - tam genişlik slider */}
+      <div className="w-full bg-black">
+        {resolved.length ? (
+          <Swiper
+            modules={[Navigation, Pagination]}
+            navigation
+            pagination={{ clickable: true }}
+            spaceBetween={10}
+            slidesPerView={1}
+            className="h-64 sm:h-80 md:h-96"
+          >
+            {resolved.map((src, idx) => (
+              <SwiperSlide key={idx} className="flex items-center justify-center">
+                <img
+                  src={src}
+                  alt={`${product.name} ${idx + 1}`}
+                  className="object-contain w-full h-full"
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
         ) : (
-          <div className="text-red-500">Görsel yok</div>
+          <div className="text-red-500 flex items-center justify-center h-64">
+            Görsel yok
+          </div>
         )}
       </div>
+
+      {/* Ürün detayları */}
       <div className="p-4">
         <h2 className="text-lg font-semibold mb-2">{product.name}</h2>
         <p className="text-gray-600 mb-4">{product.description}</p>
