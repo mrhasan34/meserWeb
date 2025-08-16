@@ -153,8 +153,8 @@ class ProductApp:
         # Sağ panela mevcut Ürün Ekleme formunu yerleştir
         self.create_add_form(self.right_panel)
 
-        # Sol panel varsayılan gösterimi: bilgilendirme
-        self.show_left_welcome()
+        # Sol panel varsayılan gösterimi: doğrudan ürün silme ekranı
+        self.show_delete_screen()
 
         # Durum çubuğu
         self.status_bar = ttk.Label(
@@ -219,9 +219,8 @@ class ProductApp:
         ttk.Button(action_frame, text="Seçiliyi Sil", command=self.left_delete_selected).pack(side=tk.LEFT)
         ttk.Button(action_frame, text="Tümünü Yenile", command=self.left_search_products).pack(side=tk.LEFT, padx=(8, 0))
 
-        # Eğer arama alanı doluysa otomatik ara
-        if self.delete_search_var.get().strip():
-            self.left_search_products()
+        # 👇 Bu satır değişti: koşul olmadan listeyi getir
+        self.left_search_products()
 
     def left_search_products(self):
         query = self.delete_search_var.get().strip()
