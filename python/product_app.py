@@ -348,23 +348,13 @@ class ProductApp:
         self.image_status = ttk.Label(image_frame, text="Resim seçilmedi", foreground="#e74c3c")
         self.image_status.pack(side=tk.LEFT)
 
-        # Resim önizleme
+        # Çoklu Resim önizleme alanı
         preview_frame = ttk.Frame(input_frame)
         preview_frame.pack(fill=tk.X, pady=10)
         ttk.Label(preview_frame, text="Önizleme:", width=12).pack(side=tk.LEFT)
-        self.preview_canvas = tk.Canvas(
-            preview_frame,
-            width=200,
-            height=200,
-            bg="#ecf0f1",
-            highlightthickness=1,
-            highlightbackground="#bdc3c7",
-        )
-        self.preview_canvas.pack(side=tk.LEFT, padx=(5, 0))
-        self.preview_label = ttk.Label(
-            preview_frame, text="Resim seçilmedi", foreground="#7f8c8d", font=("Arial", 9)
-        )
-        self.preview_label.pack(side=tk.LEFT, padx=10)
+        self.preview_area = tk.Frame(preview_frame, bg="#ecf0f1")
+        self.preview_area.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.preview_images = []  # referansları saklamak için
 
         # Butonlar
         button_frame = ttk.Frame(parent)
@@ -374,11 +364,6 @@ class ProductApp:
         )
         ttk.Button(button_frame, text="Temizle", command=self.clear_form).pack(side=tk.LEFT)
 
-        # Başlangıç önizleme metni
-        self.preview_canvas.create_text(
-            100, 100, text="Resim Önizleme", fill="#7f8c8d", font=("Arial", 10)
-        )
-
     def select_images(self):
         file_paths = filedialog.askopenfilenames(
             title="Ürün Resimleri Seçin",
@@ -386,7 +371,7 @@ class ProductApp:
         )
 
         if file_paths:
-            # Öncekileri silme → ekle
+            # Öncekileri silme, yeni seçimleri ekle
             self.image_paths.extend(file_paths)
 
             self.image_status.config(
@@ -394,18 +379,23 @@ class ProductApp:
                 foreground="#27ae60"
             )
 
-            try:
-                # Son eklenen ilk resmi önizle
-                image = Image.open(self.image_paths[-1])
-                image.thumbnail((200, 200))
-                photo = ImageTk.PhotoImage(image)
+            # Önizleme alanını temizle
+            for widget in self.preview_area.winfo_children():
+                widget.destroy()
+            self.preview_images.clear()
 
-                self.preview_canvas.delete("all")
-                self.preview_canvas.create_image(100, 100, image=photo)
-                self.preview_canvas.image = photo
-                self.preview_label.config(text=f"Toplam {len(self.image_paths)} resim seçildi")
-            except Exception as e:
-                self.image_status.config(text=f"Hata: {str(e)}", foreground="#e74c3c")
+            # Tüm seçilen resimleri thumbnail olarak göster
+            for img_path in self.image_paths:
+                try:
+                    image = Image.open(img_path)
+                    image.thumbnail((80, 80))
+                    photo = ImageTk.PhotoImage(image)
+                    self.preview_images.append(photo)  # referansları sakla
+
+                    lbl = tk.Label(self.preview_area, image=photo, bg="#ecf0f1")
+                    lbl.pack(side=tk.LEFT, padx=5, pady=5)
+                except Exception as e:
+                    print(f"Önizleme hatası: {e}")
 
     def generate_unique_id(self):
         return str(uuid.uuid4().int)[:8]
@@ -510,11 +500,12 @@ class ProductApp:
         self.desc_entry.delete("1.0", tk.END)
         self.image_paths = []
         self.image_status.config(text="Resim seçilmedi", foreground="#e74c3c")
-        self.preview_canvas.delete("all")
-        self.preview_canvas.create_text(
-            100, 100, text="Resim Önizleme", fill="#7f8c8d", font=("Arial", 10)
-        )
-        self.preview_label.config(text="Resim seçilmedi")
+        # Çoklu önizleme alanını temizle
+        if hasattr(self, "preview_area"):
+            for widget in self.preview_area.winfo_children():
+                widget.destroy()
+        if hasattr(self, "preview_images"):
+            self.preview_images.clear()
         self.status_bar.config(text="Hazır")
 
 
