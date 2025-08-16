@@ -386,22 +386,24 @@ class ProductApp:
         )
 
         if file_paths:
-            self.image_paths = list(file_paths)
+            # Öncekileri silme → ekle
+            self.image_paths.extend(file_paths)
+
             self.image_status.config(
-                text=f"{len(self.image_paths)} resim seçildi", 
+                text=f"{len(self.image_paths)} resim seçildi",
                 foreground="#27ae60"
             )
 
             try:
-                # İlk resmi önizle
-                image = Image.open(self.image_paths[0])
+                # Son eklenen ilk resmi önizle
+                image = Image.open(self.image_paths[-1])
                 image.thumbnail((200, 200))
                 photo = ImageTk.PhotoImage(image)
 
                 self.preview_canvas.delete("all")
                 self.preview_canvas.create_image(100, 100, image=photo)
                 self.preview_canvas.image = photo
-                self.preview_label.config(text=f"{len(self.image_paths)} resim seçildi")
+                self.preview_label.config(text=f"Toplam {len(self.image_paths)} resim seçildi")
             except Exception as e:
                 self.image_status.config(text=f"Hata: {str(e)}", foreground="#e74c3c")
 
