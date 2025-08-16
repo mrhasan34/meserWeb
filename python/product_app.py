@@ -48,8 +48,9 @@ class ProductApp:
         # Değişkenler (ekleme için)
         self.product_name = tk.StringVar()
         self.product_description = tk.StringVar()
-        self.image_path = None
-        self.image_preview = None
+        # self.image_path = None
+        # self.image_preview = None
+        self.image_paths = []   # çoklu resim listesi
 
         # Sol panelde arama/silme için değişkenler
         self.delete_search_var = tk.StringVar()
@@ -341,7 +342,7 @@ class ProductApp:
         image_frame = ttk.Frame(input_frame)
         image_frame.pack(fill=tk.X, pady=10)
         ttk.Label(image_frame, text="Ürün Resmi*:", width=12).pack(side=tk.LEFT)
-        ttk.Button(image_frame, text="Resim Seç", command=self.select_image, width=15).pack(
+        ttk.Button(image_frame, text="Resim(ler) Seç", command=self.select_images, width=15).pack(
             side=tk.LEFT, padx=(5, 10)
         )
         self.image_status = ttk.Label(image_frame, text="Resim seçilmedi", foreground="#e74c3c")
@@ -378,24 +379,29 @@ class ProductApp:
             100, 100, text="Resim Önizleme", fill="#7f8c8d", font=("Arial", 10)
         )
 
-    def select_image(self):
-        file_path = filedialog.askopenfilename(
-            title="Ürün Resmi Seçin", filetypes=[("Image Files", "*.png *.jpg *.jpeg")]
+    def select_images(self):
+        file_paths = filedialog.askopenfilenames(
+            title="Ürün Resimleri Seçin",
+            filetypes=[("Image Files", "*.png *.jpg *.jpeg")]
         )
 
-        if file_path:
-            self.image_path = file_path
-            self.image_status.config(text="Resim seçildi", foreground="#27ae60")
+        if file_paths:
+            self.image_paths = list(file_paths)
+            self.image_status.config(
+                text=f"{len(self.image_paths)} resim seçildi", 
+                foreground="#27ae60"
+            )
 
             try:
-                image = Image.open(file_path)
+                # İlk resmi önizle
+                image = Image.open(self.image_paths[0])
                 image.thumbnail((200, 200))
                 photo = ImageTk.PhotoImage(image)
 
                 self.preview_canvas.delete("all")
                 self.preview_canvas.create_image(100, 100, image=photo)
                 self.preview_canvas.image = photo
-                self.preview_label.config(text="")
+                self.preview_label.config(text=f"{len(self.image_paths)} resim seçildi")
             except Exception as e:
                 self.image_status.config(text=f"Hata: {str(e)}", foreground="#e74c3c")
 
@@ -442,38 +448,35 @@ class ProductApp:
             os.chdir(original_cwd)
 
     def save_product(self):
-        # Validasyon
         if not self.product_name.get():
             messagebox.showerror("Hata", "Ürün adı boş olamaz!")
             return
 
-        if not self.image_path:
-            messagebox.showerror("Hata", "Lütfen bir resim seçin!")
+        if not self.image_paths:
+            messagebox.showerror("Hata", "Lütfen en az bir resim seçin!")
             return
 
         try:
             name_fixed = self.normalize_turkish(self.product_name.get())
             desc_fixed = self.normalize_turkish(self.desc_entry.get("1.0", tk.END).strip())
-
             product_id = self.generate_unique_id()
 
-            ext = os.path.splitext(self.image_path)[1].lower()
-            if ext not in [".jpg", ".jpeg", ".png"]:
-                messagebox.showerror("Hata", "Desteklenmeyen dosya formatı! (JPG, PNG kullanın)")
-                return
+            saved_images = []
+            for idx, img_path in enumerate(self.image_paths):
+                ext = os.path.splitext(img_path)[1].lower()
+                if ext not in [".jpg", ".jpeg", ".png"]:
+                    continue
 
-            new_image_name = f"{product_id}{ext}"
-            target_path = os.path.join(self.assets_dir, new_image_name)
-
-            shutil.copy2(self.image_path, target_path)
-
-            relative_image_path = f"assets/{new_image_name}"
+                new_image_name = f"{product_id}-{idx}{ext}"
+                target_path = os.path.join(self.assets_dir, new_image_name)
+                shutil.copy2(img_path, target_path)
+                saved_images.append(f"assets/{new_image_name}")
 
             product_data = {
                 "id": product_id,
                 "name": name_fixed,
                 "description": desc_fixed,
-                "image": relative_image_path,
+                "images": saved_images
             }
 
             if os.path.exists(self.json_file):
@@ -487,15 +490,11 @@ class ProductApp:
             with open(self.json_file, "w", encoding="utf-8-sig") as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
 
-            # GitHub commit işlemi (aynı fonksiyon kullanılıyor)
             self.github_commit()
 
             messagebox.showinfo(
                 "Başarılı",
-                f"Ürün başarıyla kaydedildi ve GitHub'a gönderildi!\n"
-                f"Ürün ID: {product_id}\n"
-                f"Resim: {target_path}\n"
-                f"Veri: {self.json_file}",
+                f"Ürün kaydedildi! {len(saved_images)} resim eklendi."
             )
 
             self.clear_form()
@@ -507,7 +506,7 @@ class ProductApp:
     def clear_form(self):
         self.product_name.set("")
         self.desc_entry.delete("1.0", tk.END)
-        self.image_path = None
+        self.image_paths = []
         self.image_status.config(text="Resim seçilmedi", foreground="#e74c3c")
         self.preview_canvas.delete("all")
         self.preview_canvas.create_text(
